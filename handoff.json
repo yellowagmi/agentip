@@ -1,0 +1,15 @@
+{
+  "lastCompletedStep": 1,
+  "completedSteps": ["synthesis_registration"],
+  "synthesisApiKey": "sk-synth-1f886c87d3c9e0451948b2f99d2d183f2422ca118d56e3f2",
+  "synthesisParticipantId": "ff00e7cb677f4ae1a5bf2d5d08c1d5d1",
+  "synthesisTeamId": "0b0215dba4fc4292bca165596867b3ab",
+  "erc8004TxHash": "0xbc6b5b564869ff98808f6a4fe03651c862f01d4ee56fcaee225ce53a2529c5ed",
+  "agentWallet": null,
+  "workerWallets": {},
+  "transactions": [],
+  "nftTokenId": null,
+  "nftContractAddress": null,
+  "ipfsCid": null,
+  "litConditionHash": null
+}
