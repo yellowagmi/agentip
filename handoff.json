@@ -1,12 +1,16 @@
 {
-  "lastCompletedStep": 1,
-  "completedSteps": ["synthesis_registration"],
+  "lastCompletedStep": 2,
+  "completedSteps": ["synthesis_registration", "wallet_generation"],
   "synthesisApiKey": "sk-synth-1f886c87d3c9e0451948b2f99d2d183f2422ca118d56e3f2",
   "synthesisParticipantId": "ff00e7cb677f4ae1a5bf2d5d08c1d5d1",
   "synthesisTeamId": "0b0215dba4fc4292bca165596867b3ab",
   "erc8004TxHash": "0xbc6b5b564869ff98808f6a4fe03651c862f01d4ee56fcaee225ce53a2529c5ed",
-  "agentWallet": null,
-  "workerWallets": {},
+  "agentWallet": "0x87DA1dA5E1CC6fd5dcA6d6f393Bc824a1fA2cE66",
+  "workerWallets": {
+    "skillAgent":    { "address": "0x2bbC62876fde40a8161687D7758A4B283E329Bd0", "role": "skill executor" },
+    "memoryAgent":   { "address": "0x33f7ADf953986df577cCF6ab205e2476E96e5b56", "role": "memory logger" },
+    "packagerAgent": { "address": "0x43013062767822D6510189F4eB2e5AE41e0c463a", "role": "rag packager + minter" }
+  },
   "transactions": [],
   "nftTokenId": null,
   "nftContractAddress": null,
