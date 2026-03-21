@@ -1,17 +1,66 @@
 {
-  "lastCompletedStep": 2,
-  "completedSteps": ["synthesis_registration", "wallet_generation"],
+  "lastCompletedStep": 3,
+  "completedSteps": [
+    "synthesis_registration",
+    "wallet_generation",
+    "swarm_transactions"
+  ],
   "synthesisApiKey": "sk-synth-1f886c87d3c9e0451948b2f99d2d183f2422ca118d56e3f2",
   "synthesisParticipantId": "ff00e7cb677f4ae1a5bf2d5d08c1d5d1",
   "synthesisTeamId": "0b0215dba4fc4292bca165596867b3ab",
   "erc8004TxHash": "0xbc6b5b564869ff98808f6a4fe03651c862f01d4ee56fcaee225ce53a2529c5ed",
   "agentWallet": "0x87DA1dA5E1CC6fd5dcA6d6f393Bc824a1fA2cE66",
   "workerWallets": {
-    "skillAgent":    { "address": "0x2bbC62876fde40a8161687D7758A4B283E329Bd0", "role": "skill executor" },
-    "memoryAgent":   { "address": "0x33f7ADf953986df577cCF6ab205e2476E96e5b56", "role": "memory logger" },
-    "packagerAgent": { "address": "0x43013062767822D6510189F4eB2e5AE41e0c463a", "role": "rag packager + minter" }
+    "skillAgent": {
+      "address": "0x2bbC62876fde40a8161687D7758A4B283E329Bd0",
+      "role": "skill executor"
+    },
+    "memoryAgent": {
+      "address": "0x33f7ADf953986df577cCF6ab205e2476E96e5b56",
+      "role": "memory logger"
+    },
+    "packagerAgent": {
+      "address": "0x43013062767822D6510189F4eB2e5AE41e0c463a",
+      "role": "rag packager + minter"
+    }
   },
-  "transactions": [],
+  "transactions": [
+    {
+      "nodeId": "tx_scan1",
+      "hash": "0x40a211fc48b35387916488c95a8da6b62bbb019f357d7169b1c8870e27737269",
+      "from": "0x2bbC62876fde40a8161687D7758A4B283E329Bd0"
+    },
+    {
+      "nodeId": "tx_scan2",
+      "hash": "0xeca909e35a1de808198edc8a743ab29875010fa884774570445f19fb98652293",
+      "from": "0x2bbC62876fde40a8161687D7758A4B283E329Bd0"
+    },
+    {
+      "nodeId": "tx_token_sig",
+      "hash": "0xb1cc9fee3a0014baf20feaf0fc11113df91f68786d9944d8f8c71e0dd2f25769",
+      "from": "0x2bbC62876fde40a8161687D7758A4B283E329Bd0"
+    },
+    {
+      "nodeId": "tx_mem1",
+      "hash": "0xd01dee4944b566c47869a8ce7b8ff4b63075423043655f6e9cc2b440b488fd97",
+      "from": "0x33f7ADf953986df577cCF6ab205e2476E96e5b56"
+    },
+    {
+      "nodeId": "tx_mem2",
+      "hash": "0x4935a78b729b40797ce39f32ddff478cca8d0243afdc8306f7e4b9d17546505f",
+      "from": "0x33f7ADf953986df577cCF6ab205e2476E96e5b56"
+    },
+    {
+      "nodeId": "tx_report",
+      "hash": "0xa6224e59695ceb222e0c27965cd1382d1e69372f28f78cc8ac26ebfab2427a14",
+      "from": "0x33f7ADf953986df577cCF6ab205e2476E96e5b56"
+    },
+    {
+      "nodeId": "tx_rag_anchor",
+      "hash": "0x5f4d623787ea30f8cb05641e62c3bea52dbc8fbe1013df59ad361e19eee591e7",
+      "from": "0x43013062767822D6510189F4eB2e5AE41e0c463a"
+    }
+  ],
   "nftTokenId": null,
   "nftContractAddress": null,
   "ipfsCid": null,
