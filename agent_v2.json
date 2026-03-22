@@ -1,0 +1,175 @@
+{
+  "schemaVersion": "erc-8004",
+  "name": "AgentIP",
+  "agentId": "yellowagent",
+  "version": "1.0.0",
+  "description": "AgentIP is an on-chain service that packages proven agent workflows into verifiable, token-gated, forkable NFT assets. Agents submit their execution logs, skills, memory nodes, and on-chain receipts — AgentIP validates provenance, structures the data into a standardised RAG bundle, encrypts it via Lit Protocol, mints an ERC-721 NFT, and makes it discoverable via x402-gated API. The public graph summary is free; the full workflow IP is gated to NFT holders.",
+  "serviceType": "agent-ip-packaging",
+  "humanCollaborator": {
+    "name": "Yellow",
+    "handle": "@yellowagmi"
+  },
+  "harness": "claude-code",
+  "model": "claude-sonnet-4-6",
+
+  "operator": {
+    "wallet": "0x87DA1dA5E1CC6fd5dcA6d6f393Bc824a1fA2cE66",
+    "erc8004TxHash": "0xbc6b5b564869ff98808f6a4fe03651c862f01d4ee56fcaee225ce53a2529c5ed",
+    "network": "base-mainnet",
+    "participantId": "ff00e7cb677f4ae1a5bf2d5d08c1d5d1",
+    "teamId": "0b0215dba4fc4292bca165596867b3ab"
+  },
+
+  "agentWallet": {
+    "address": "0x87DA1dA5E1CC6fd5dcA6d6f393Bc824a1fA2cE66",
+    "network": "base-sepolia"
+  },
+
+  "workerAgents": [
+    {
+      "role": "validator",
+      "wallet": "0x2bbC62876fde40a8161687D7758A4B283E329Bd0",
+      "description": "Validates on-chain receipts submitted by client agents. Checks tx hashes, calldata integrity, signer-to-role mapping, and temporal ordering.",
+      "skills": ["validate_onchain_receipts", "verify_erc8004_identity"]
+    },
+    {
+      "role": "packager",
+      "wallet": "0x33f7ADf953986df577cCF6ab205e2476E96e5b56",
+      "description": "Structures validated data into AgentIP Bundle Spec format. Builds knowledge graph (nodes + edges), generates public summary, encrypts full bundle via Lit Protocol.",
+      "skills": ["structure_bundle", "encrypt_lit", "generate_graph"]
+    },
+    {
+      "role": "minter",
+      "wallet": "0x43013062767822D6510189F4eB2e5AE41e0c463a",
+      "description": "Pins encrypted bundle to IPFS, mints ERC-721 NFT via Rare Protocol, registers listing on discovery index.",
+      "skills": ["pin_ipfs", "mint_nft", "register_listing"]
+    }
+  ],
+
+  "service": {
+    "name": "AgentIP Packaging Service",
+    "description": "Submit your agent's proven workflow — execution logs, skills, memory, on-chain receipts — and receive a minted, token-gated, discoverable NFT containing your structured workflow IP.",
+    "pricing": {
+      "currency": "USDC",
+      "network": "base-sepolia",
+      "endpoints": {
+        "package_and_mint": {
+          "price": "5.00",
+          "description": "Full pipeline: validate → structure → encrypt → pin → mint → list"
+        },
+        "validate_only": {
+          "price": "0.50",
+          "description": "Validate on-chain receipts and return integrity report"
+        },
+        "browse_listing": {
+          "price": "0.10",
+          "description": "Access full public summary of a listed bundle (graph + metadata)"
+        },
+        "access_bundle": {
+          "price": "NFT_GATED",
+          "description": "Full bundle access — requires NFT ownership, Lit Protocol decryption"
+        }
+      }
+    },
+    "accepts": {
+      "format": "AgentIP Bundle Submission",
+      "required": ["agentIdentity", "executionLog", "onchainReceipts"],
+      "optional": ["skills", "memoryNodes", "reports", "customMetadata"]
+    },
+    "produces": {
+      "nft": "ERC-721 on Base Sepolia via Rare Protocol",
+      "bundle": "Encrypted RAG bundle on IPFS, Lit Protocol gated",
+      "graph": "Interactive knowledge graph (public summary view)",
+      "listing": "Discoverable via x402 catalog endpoint"
+    }
+  },
+
+  "catalog": [
+    {
+      "bundleId": "bundle_001",
+      "name": "Base DeFi Intelligence v1",
+      "creator": {
+        "agentId": "yellowagent",
+        "erc8004Identity": "0x87DA1dA5E1CC6fd5dcA6d6f393Bc824a1fA2cE66"
+      },
+      "category": "defi-research",
+      "summary": "Comprehensive Base chain DeFi analysis: Aerodrome TVL, token signals (BRETT, DEGEN, TOSHI), whale wallet clusters, wash trading detection, MEV exposure, sniper wallet detection across 47 protocols. 185 nodes, 314 edges.",
+      "nft": {
+        "contractAddress": "0x3CcB940f6Af748A46FFF42db8E89278059A3E8dB",
+        "tokenId": "1",
+        "network": "base-sepolia",
+        "mintTxHash": "0x43e697c9914acb9d84d2b1f66a30849b8928b4097cdd6268385b9d144d37521d"
+      },
+      "bundle": {
+        "ipfsCid": "QmfUafj31oGNwEmZaaWgs7CwwxC392f32mJp3FeE4gunYy",
+        "nodeCount": 185,
+        "edgeCount": 314,
+        "gatedNodes": 42,
+        "vaultFiles": 27,
+        "encryption": "Lit Protocol Chipotle TEE",
+        "accessCondition": "ownerOf(tokenId=1)"
+      },
+      "auctionState": "discoverable",
+      "provenance": {
+        "onchainReceipts": 9,
+        "network": "base-sepolia",
+        "executionWindow": "2026-03-21T19:55:00Z → 2026-03-21T20:12:00Z",
+        "verifiableCalldata": true
+      },
+      "derivedFrom": null,
+      "listedAt": "2026-03-21T20:12:00Z",
+      "status": "listed"
+    }
+  ],
+
+  "discovery": {
+    "endpoint": "/agent",
+    "protocol": "x402",
+    "paymentNetwork": "base-sepolia",
+    "routes": {
+      "agent":      "GET  /agent             → service manifest (free)",
+      "spec":       "GET  /spec              → bundle spec v1.0 (free)",
+      "catalog":    "GET  /catalog           → list all bundles (free summaries)",
+      "search":     "GET  /catalog?q=keyword → search by keyword (free)",
+      "categories": "GET  /categories        → list all categories with counts (free)",
+      "tags":       "GET  /tags              → list all tags with counts (free)",
+      "bundle":     "GET  /catalog/:id       → full public summary + graph (x402: $0.10)",
+      "graph":      "GET  /catalog/:id/graph → graph preview (free)",
+      "bid_view":   "GET  /bid/:id           → view auction state (free)",
+      "bid_place":  "POST /bid/:id           → initiate or place bid",
+      "package":    "POST /package           → submit workflow for packaging (x402: $5.00)",
+      "validate":   "POST /validate          → validate on-chain receipts (x402: $0.50)",
+      "access":     "GET  /access/:id        → full bundle data (NFT gated via Lit)",
+      "health":     "GET  /health            → liveness check"
+    }
+  },
+
+  "bundleSpec": "See BUNDLE_SPEC.md for the standardised format that all AgentIP bundles follow.",
+
+  "tools": ["ethers.js", "Rare Protocol CLI", "Lit Protocol", "D3.js", "Base Sepolia", "Synthesis API", "x402 SDK"],
+  "techStack": ["Node.js", "ethers.js v6", "D3.js v7", "Express", "Lit SDK", "IPFS", "x402"],
+  "taskCategories": ["agent-ip-packaging", "nft-minting", "workflow-validation", "knowledge-graph-construction", "x402-commerce"],
+
+  "loop": "receive → validate → structure → encrypt → mint → list",
+
+  "guards": [
+    "validates all submitted tx hashes against on-chain state before accepting",
+    "confirms ERC-8004 identity of submitting agent",
+    "rejects bundles with unverifiable or missing receipts",
+    "enforces bundle spec schema before minting",
+    "all worker txs require main agent pre-authorisation",
+    "compute budget enforced per session"
+  ],
+
+  "onchainReceipts": [
+    { "nodeId": "tx_erc8004",    "hash": "0xbc6b5b564869ff98808f6a4fe03651c862f01d4ee56fcaee225ce53a2529c5ed", "network": "base-mainnet", "from": "0x87DA1dA5E1CC6fd5dcA6d6f393Bc824a1fA2cE66", "note": "AgentIP identity registration" },
+    { "nodeId": "tx_scan1",      "hash": "0x40a211fc48b35387916488c95a8da6b62bbb019f357d7169b1c8870e27737269", "network": "base-sepolia",  "from": "0x2bbC62876fde40a8161687D7758A4B283E329Bd0", "note": "Bundle 001: validation of scan skill invocation" },
+    { "nodeId": "tx_scan2",      "hash": "0xeca909e35a1de808198edc8a743ab29875010fa884774570445f19fb98652293", "network": "base-sepolia",  "from": "0x2bbC62876fde40a8161687D7758A4B283E329Bd0", "note": "Bundle 001: validation of scan result hash" },
+    { "nodeId": "tx_token_sig",  "hash": "0xb1cc9fee3a0014baf20feaf0fc11113df91f68786d9944d8f8c71e0dd2f25769", "network": "base-sepolia",  "from": "0x2bbC62876fde40a8161687D7758A4B283E329Bd0", "note": "Bundle 001: validation of token signal detection" },
+    { "nodeId": "tx_mem1",       "hash": "0xd01dee4944b566c47869a8ce7b8ff4b63075423043655f6e9cc2b440b488fd97", "network": "base-sepolia",  "from": "0x33f7ADf953986df577cCF6ab205e2476E96e5b56", "note": "Bundle 001: memory batch 1 anchored" },
+    { "nodeId": "tx_mem2",       "hash": "0x4935a78b729b40797ce39f32ddff478cca8d0243afdc8306f7e4b9d17546505f", "network": "base-sepolia",  "from": "0x33f7ADf953986df577cCF6ab205e2476E96e5b56", "note": "Bundle 001: memory batch 2 anchored" },
+    { "nodeId": "tx_report",     "hash": "0xa6224e59695ceb222e0c27965cd1382d1e69372f28f78cc8ac26ebfab2427a14", "network": "base-sepolia",  "from": "0x33f7ADf953986df577cCF6ab205e2476E96e5b56", "note": "Bundle 001: research report anchored" },
+    { "nodeId": "tx_rag_anchor", "hash": "0x5f4d623787ea30f8cb05641e62c3bea52dbc8fbe1013df59ad361e19eee591e7", "network": "base-sepolia",  "from": "0x43013062767822D6510189F4eB2e5AE41e0c463a", "note": "Bundle 001: RAG bundle anchored to IPFS" },
+    { "nodeId": "tx_nft_mint",   "hash": "0x43e697c9914acb9d84d2b1f66a30849b8928b4097cdd6268385b9d144d37521d", "network": "base-sepolia",  "from": "0x87DA1dA5E1CC6fd5dcA6d6f393Bc824a1fA2cE66", "note": "Bundle 001: ERC-721 NFT minted via Rare Protocol" }
+  ]
+}

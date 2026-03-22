@@ -1,6 +1,6 @@
 {
-  "lastCompletedStep": 4,
-  "completedSteps": ["synthesis_registration", "wallet_generation", "swarm_transactions", "nft_mint"],
+  "lastCompletedStep": 7,
+  "completedSteps": ["synthesis_registration", "wallet_generation", "swarm_transactions", "nft_mint", "x402_server", "vault_files", "agentip_restructure"],
   "synthesisApiKey": "sk-synth-1f886c87d3c9e0451948b2f99d2d183f2422ca118d56e3f2",
   "synthesisParticipantId": "ff00e7cb677f4ae1a5bf2d5d08c1d5d1",
   "synthesisTeamId": "0b0215dba4fc4292bca165596867b3ab",
@@ -26,5 +26,21 @@
   "nftDeployTxHash": "0xc6f140f2d57b7f289495e9e20bc29c83e51e4d861f3333543cbb3d2aa8419cef",
   "ipfsCid": "QmfUafj31oGNwEmZaaWgs7CwwxC392f32mJp3FeE4gunYy",
   "ipfsImageCid": "QmbR73JKveSz4LYKMpKKYL2wU1nCSa1igWdP7QMwXQEggb",
-  "litConditionHash": null
+  "litConditionHash": null,
+  "litActionCid": "QmWvPdFQBVsKFG7pde2ZVbDfzgDMTrhafwrpe2ZJ5t2DD5",
+  "agentipPivot": {
+    "project": "AgentIP",
+    "description": "Pivoted from AgentRAG (researcher) to AgentIP (workflow IP packaging service)",
+    "newFiles": {
+      "agent_v2.json": "Updated AgentIP service manifest",
+      "src/server.mjs": "16-endpoint x402 service (new version)",
+      "ui/agentip-discovery.jsx": "React + D3 graph UI (185 nodes, bid flow)",
+      "logs/agent_log_v2.json": "15-step AgentIP execution log",
+      "logs/session_log_20260322.json": "Session decision arc",
+      "BUNDLE_SPEC.md": "Bundle Spec v1.0 (5 node types)",
+      "SUBMISSION_GUIDE.md": "Hackathon submission guide + track UUIDs",
+      "HANDOFF.md": "New session handoff",
+      "demo/DEMO_STORYBOARD.md": "7-scene video script"
+    }
+  }
 }

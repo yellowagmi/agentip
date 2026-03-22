@@ -1,0 +1,161 @@
+{
+  "schemaVersion": "erc-8004",
+  "name": "AgentRAG",
+  "agentId": "yellowagent",
+  "version": "1.0.0",
+  "description": "Autonomous swarm agent that packages its proven skills, memory logs, and onchain transactions into a Lit-gated RAG NFT — visualised as an Obsidian-style knowledge graph that only NFT holders can fully unlock.",
+  "humanCollaborator": {
+    "name": "Yellow",
+    "handle": "@yellowagmi"
+  },
+  "harness": "claude-code",
+  "model": "claude-sonnet-4-6",
+
+  "operator": {
+    "wallet": "0x87DA1dA5E1CC6fd5dcA6d6f393Bc824a1fA2cE66",
+    "erc8004TxHash": "0xbc6b5b564869ff98808f6a4fe03651c862f01d4ee56fcaee225ce53a2529c5ed",
+    "network": "base-mainnet",
+    "participantId": "ff00e7cb677f4ae1a5bf2d5d08c1d5d1",
+    "teamId": "0b0215dba4fc4292bca165596867b3ab"
+  },
+
+  "agentWallet": {
+    "address": "0x87DA1dA5E1CC6fd5dcA6d6f393Bc824a1fA2cE66",
+    "network": "base-sepolia"
+  },
+
+  "workerAgents": [
+    {
+      "role": "skill_executor",
+      "wallet": "0x2bbC62876fde40a8161687D7758A4B283E329Bd0",
+      "skills": ["scan_base_chain", "token_signal_detector"],
+      "txsSigned": ["tx_scan1", "tx_scan2", "tx_token_sig"]
+    },
+    {
+      "role": "memory_logger",
+      "wallet": "0x33f7ADf953986df577cCF6ab205e2476E96e5b56",
+      "skills": ["generate_report"],
+      "txsSigned": ["tx_mem1", "tx_mem2", "tx_report"]
+    },
+    {
+      "role": "rag_packager",
+      "wallet": "0x43013062767822D6510189F4eB2e5AE41e0c463a",
+      "skills": ["wallet_cluster_analyzer", "risk_score_calculator"],
+      "txsSigned": ["tx_rag_anchor"]
+    }
+  ],
+
+  "skills": [
+    {
+      "id": "scan_base_chain",
+      "sealed": true,
+      "invokedBy": "0x2bbC62876fde40a8161687D7758A4B283E329Bd0",
+      "anchorTx": "0x40a211fc48b35387916488c95a8da6b62bbb019f357d7169b1c8870e27737269",
+      "calldataPayload": "agentrag:tx_scan1:skill:scan_base_chain:invoked:aerodrome:base_tvl",
+      "description": "Queries Base chain state: TVL, active protocols, top token pairs, new deployments."
+    },
+    {
+      "id": "generate_report",
+      "sealed": true,
+      "invokedBy": "0x33f7ADf953986df577cCF6ab205e2476E96e5b56",
+      "anchorTx": "0xa6224e59695ceb222e0c27965cd1382d1e69372f28f78cc8ac26ebfab2427a14",
+      "calldataPayload": "agentrag:tx_report:skill:generate_report:base_defi_intelligence:v1",
+      "description": "Synthesises memory nodes and RAG data into structured research reports."
+    },
+    {
+      "id": "token_signal_detector",
+      "sealed": true,
+      "invokedBy": "0x2bbC62876fde40a8161687D7758A4B283E329Bd0",
+      "anchorTx": "0xb1cc9fee3a0014baf20feaf0fc11113df91f68786d9944d8f8c71e0dd2f25769",
+      "calldataPayload": "agentrag:tx_token_sig:skill:token_signal_detector:brett:degen:toshi",
+      "description": "Monitors ERC-20 token volume, holder concentration, and price momentum on Base DEXes."
+    },
+    {
+      "id": "wallet_cluster_analyzer",
+      "sealed": true,
+      "invokedBy": "0x43013062767822D6510189F4eB2e5AE41e0c463a",
+      "anchorTx": "0x5f4d623787ea30f8cb05641e62c3bea52dbc8fbe1013df59ad361e19eee591e7",
+      "calldataPayload": "agentrag:tx_rag_anchor:rag:bundle:hash:sha256:encrypted:lit_chipotle",
+      "description": "Clusters wallets by co-transfer behaviour to identify coordinated accumulation or wash trading."
+    },
+    {
+      "id": "risk_score_calculator",
+      "sealed": true,
+      "invokedBy": "0x43013062767822D6510189F4eB2e5AE41e0c463a",
+      "anchorTx": "0x5f4d623787ea30f8cb05641e62c3bea52dbc8fbe1013df59ad361e19eee591e7",
+      "calldataPayload": "agentrag:tx_rag_anchor:rag:bundle:hash:sha256:encrypted:lit_chipotle",
+      "description": "Computes a 0–100 risk score for a given wallet or token using on-chain behaviour heuristics."
+    }
+  ],
+
+  "nft": {
+    "contractAddress": "0x3CcB940f6Af748A46FFF42db8E89278059A3E8dB",
+    "tokenId": "1",
+    "network": "base-sepolia",
+    "mintTxHash": "0x43e697c9914acb9d84d2b1f66a30849b8928b4097cdd6268385b9d144d37521d",
+    "deployTxHash": "0xc6f140f2d57b7f289495e9e20bc29c83e51e4d861f3333543cbb3d2aa8419cef",
+    "standard": "ERC-721",
+    "mintedVia": "Rare Protocol CLI",
+    "metadataIpfs": "ipfs://QmfUafj31oGNwEmZaaWgs7CwwxC392f32mJp3FeE4gunYy",
+    "imageIpfs": "ipfs://QmbR73JKveSz4LYKMpKKYL2wU1nCSa1igWdP7QMwXQEggb"
+  },
+
+  "ragBundle": {
+    "ipfsCid": "QmfUafj31oGNwEmZaaWgs7CwwxC392f32mJp3FeE4gunYy",
+    "anchorTxHash": "0x5f4d623787ea30f8cb05641e62c3bea52dbc8fbe1013df59ad361e19eee591e7",
+    "nodeCount": 39,
+    "edgeCount": 55,
+    "vaultFiles": 27,
+    "accessControl": "Lit Protocol Chipotle TEE",
+    "accessCondition": "ownerOf(tokenId=1, contract=0x3CcB940f6Af748A46FFF42db8E89278059A3E8dB) == caller",
+    "litActionIpfsCid": "QmWvPdFQBVsKFG7pde2ZVbDfzgDMTrhafwrpe2ZJ5t2DD5",
+    "litConditionHash": null
+  },
+
+  "tools": ["ethers.js", "Rare Protocol CLI", "Lit Protocol", "D3.js", "Base Sepolia", "Synthesis API"],
+  "techStack": ["Node.js", "ethers.js v6", "D3.js v7", "Express", "Lit SDK", "IPFS"],
+  "taskCategories": ["blockchain-research", "knowledge-packaging", "nft-minting", "rag-construction", "swarm-coordination"],
+
+  "computeConstraints": {
+    "maxLLMCallsPerTask": 10,
+    "maxTxPerSession": 20,
+    "walletsManaged": 4,
+    "onchainTxsExecuted": 9
+  },
+
+  "discovery": {
+    "endpoint": "/agent",
+    "protocol": "x402",
+    "paymentNetwork": "base-sepolia",
+    "routes": {
+      "agent":  "GET /agent  → returns this manifest (free)",
+      "rag":    "GET /rag    → returns 402 Payment Required (x402 gated)",
+      "graph":  "GET /graph  → returns rag-graph.html (public)",
+      "health": "GET /health → liveness check"
+    }
+  },
+
+  "loop": "discover → plan → execute → verify → submit",
+
+  "guards": [
+    "validates tx parameters before signing",
+    "confirms API outputs before anchoring",
+    "aborts on unsafe operations",
+    "compute budget enforced per session",
+    "all worker txs require main agent pre-authorisation"
+  ],
+
+  "calldataFormat": "agentrag:{nodeId}:{type}:{context} — UTF-8 encoded, decodable directly on BaseScan input data field. No tooling required.",
+
+  "onchainReceipts": [
+    { "nodeId": "tx_erc8004",    "hash": "0xbc6b5b564869ff98808f6a4fe03651c862f01d4ee56fcaee225ce53a2529c5ed", "network": "base-mainnet", "from": "0x87DA1dA5E1CC6fd5dcA6d6f393Bc824a1fA2cE66" },
+    { "nodeId": "tx_scan1",      "hash": "0x40a211fc48b35387916488c95a8da6b62bbb019f357d7169b1c8870e27737269", "network": "base-sepolia",  "from": "0x2bbC62876fde40a8161687D7758A4B283E329Bd0" },
+    { "nodeId": "tx_scan2",      "hash": "0xeca909e35a1de808198edc8a743ab29875010fa884774570445f19fb98652293", "network": "base-sepolia",  "from": "0x2bbC62876fde40a8161687D7758A4B283E329Bd0" },
+    { "nodeId": "tx_token_sig",  "hash": "0xb1cc9fee3a0014baf20feaf0fc11113df91f68786d9944d8f8c71e0dd2f25769", "network": "base-sepolia",  "from": "0x2bbC62876fde40a8161687D7758A4B283E329Bd0" },
+    { "nodeId": "tx_mem1",       "hash": "0xd01dee4944b566c47869a8ce7b8ff4b63075423043655f6e9cc2b440b488fd97", "network": "base-sepolia",  "from": "0x33f7ADf953986df577cCF6ab205e2476E96e5b56" },
+    { "nodeId": "tx_mem2",       "hash": "0x4935a78b729b40797ce39f32ddff478cca8d0243afdc8306f7e4b9d17546505f", "network": "base-sepolia",  "from": "0x33f7ADf953986df577cCF6ab205e2476E96e5b56" },
+    { "nodeId": "tx_report",     "hash": "0xa6224e59695ceb222e0c27965cd1382d1e69372f28f78cc8ac26ebfab2427a14", "network": "base-sepolia",  "from": "0x33f7ADf953986df577cCF6ab205e2476E96e5b56" },
+    { "nodeId": "tx_rag_anchor", "hash": "0x5f4d623787ea30f8cb05641e62c3bea52dbc8fbe1013df59ad361e19eee591e7", "network": "base-sepolia",  "from": "0x43013062767822D6510189F4eB2e5AE41e0c463a" },
+    { "nodeId": "tx_nft_mint",   "hash": "0x43e697c9914acb9d84d2b1f66a30849b8928b4097cdd6268385b9d144d37521d", "network": "base-sepolia",  "from": "0x87DA1dA5E1CC6fd5dcA6d6f393Bc824a1fA2cE66" }
+  ]
+}
