@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgentRAG — Knowledge Graph</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+  :root {
+    --bg: #0d0f12;
+    --bg2: #13161b;
+    --bg3: #1a1e26;
+    --panel: #161a22;
+    --border: rgba(255,255,255,0.07);
+    --text: #e8e6e0;
+    --muted: #6b7280;
+    --dim: #3d4452;
+
+    --skill:   #7c6af7;
+    --skill-g: rgba(124,106,247,0.18);
+    --tx:      #f0a040;
+    --tx-g:    rgba(240,160,64,0.18);
+    --mem:     #3ec9a7;
+    --mem-g:   rgba(62,201,167,0.15);
+    --rag:     #e05c7a;
+    --rag-g:   rgba(224,92,122,0.18);
+    --agent:   #4ea8f0;
+    --agent-g: rgba(78,168,240,0.2);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+    font-size: 13px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* TOP BAR */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    height: 48px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    z-index: 10;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--text);
+  }
+  .logo-icon {
+    width: 24px; height: 24px;
+    background: conic-gradient(from 0deg, var(--skill), var(--rag), var(--tx), var(--skill));
+    border-radius: 6px;
+    flex-shrink: 0;
+  }
+  .agent-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .agent-badge .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--mem);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .lock-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(224,92,122,0.12);
+    border: 1px solid rgba(224,92,122,0.3);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 11px;
+    color: var(--rag);
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .lock-badge:hover { background: rgba(224,92,122,0.2); }
+
+  /* MAIN LAYOUT */
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* LEFT LEGEND */
+  .legend {
+    width: 200px;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    flex-shrink: 0;
+    overflow-y: auto;
+  }
+  .legend h3 {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 3px 0;
+    transition: color 0.15s;
+  }
+  .legend-item:hover { color: var(--text); }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .legend-hex {
+    width: 12px; height: 12px;
+    flex-shrink: 0;
+    clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+  }
+  .legend-diamond {
+    width: 10px; height: 10px;
+    flex-shrink: 0;
+    transform: rotate(45deg);
+    border-radius: 2px;
+  }
+  .legend-ring {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    border: 2px solid;
+    flex-shrink: 0;
+  }
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    padding: 3px 0;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .stat-row span:last-child { color: var(--text); font-weight: 500; }
+
+  /* GRAPH CANVAS */
+  #graph {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+  svg#canvas {
+    width: 100%; height: 100%;
+    cursor: grab;
+  }
+  svg#canvas:active { cursor: grabbing; }
+
+  .node-circle { cursor: pointer; }
+  .node-circle:hover { filter: brightness(1.3); }
+
+  .link {
+    stroke: rgba(255,255,255,0.08);
+    stroke-width: 1;
+    fill: none;
+    transition: stroke 0.2s;
+  }
+  .link.highlighted { stroke: rgba(255,255,255,0.35); stroke-width: 1.5; }
+
+  .node-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    fill: rgba(255,255,255,0.55);
+    pointer-events: none;
+    text-anchor: middle;
+  }
+  .node-label.selected { fill: rgba(255,255,255,0.95); }
+
+  /* TOOLTIP */
+  #tooltip {
+    position: absolute;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    max-width: 260px;
+    z-index: 100;
+    font-size: 11px;
+    line-height: 1.6;
+  }
+  #tooltip.visible { opacity: 1; }
+  #tooltip .tt-type {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+  #tooltip .tt-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  #tooltip .tt-desc { color: var(--muted); font-size: 11px; }
+  #tooltip .tt-sealed {
+    margin-top: 8px;
+    padding: 6px 8px;
+    background: rgba(224,92,122,0.1);
+    border: 1px solid rgba(224,92,122,0.25);
+    border-radius: 4px;
+    color: var(--rag);
+    font-size: 10px;
+  }
+  #tooltip .tt-tx {
+    margin-top: 8px;
+    padding: 5px 8px;
+    background: rgba(240,160,64,0.08);
+    border: 1px solid rgba(240,160,64,0.2);
+    border-radius: 4px;
+    color: var(--tx);
+    font-size: 9px;
+    font-family: monospace;
+    word-break: break-all;
+  }
+
+  /* DETAIL PANEL */
+  #detail {
+    width: 260px;
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: width 0.3s;
+    flex-shrink: 0;
+  }
+  #detail.hidden { width: 0; }
+  .detail-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .detail-close {
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 16px;
+    line-height: 1;
+    padding: 2px 4px;
+  }
+  .detail-close:hover { color: var(--text); }
+  .detail-body { padding: 16px; overflow-y: auto; flex: 1; }
+  .detail-type {
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .detail-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 10px;
+    line-height: 1.3;
+  }
+  .detail-desc {
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.7;
+    margin-bottom: 14px;
+  }
+  .detail-field {
+    margin-bottom: 10px;
+  }
+  .detail-field label {
+    display: block;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 3px;
+  }
+  .detail-field .val {
+    font-size: 11px;
+    color: var(--muted);
+    word-break: break-all;
+  }
+  .sealed-block {
+    margin-top: 14px;
+    padding: 10px;
+    background: rgba(224,92,122,0.07);
+    border: 1px solid rgba(224,92,122,0.2);
+    border-radius: 6px;
+  }
+  .sealed-block .seal-title {
+    font-size: 10px;
+    color: var(--rag);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .sealed-block .seal-desc {
+    font-size: 10px;
+    color: rgba(224,92,122,0.65);
+    line-height: 1.5;
+  }
+  .tx-block {
+    margin-top: 10px;
+    padding: 8px;
+    background: rgba(240,160,64,0.06);
+    border: 1px solid rgba(240,160,64,0.15);
+    border-radius: 6px;
+  }
+  .tx-block label { font-size: 9px; color: var(--tx); letter-spacing: 0.1em; text-transform: uppercase; display: block; margin-bottom: 4px; }
+  .tx-block .tx-hash { font-size: 9px; color: rgba(240,160,64,0.75); word-break: break-all; font-family: monospace; }
+
+  /* BOTTOM STATUS */
+  .statusbar {
+    height: 28px;
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 0 16px;
+    font-size: 10px;
+    color: var(--dim);
+    flex-shrink: 0;
+  }
+  .statusbar span { display: flex; align-items: center; gap: 5px; }
+  .statusbar .lit { color: var(--rag); }
+
+  /* Search bar overlay */
+  #searchbar {
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    width: 280px;
+  }
+  #searchbar input {
+    width: 100%;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    color: var(--text);
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  #searchbar input:focus { border-color: var(--skill); }
+  #searchbar input::placeholder { color: var(--dim); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon"></div>
+    AgentRAG
+    <span style="color:var(--muted);font-weight:400;font-size:11px;margin-left:4px">/ knowledge graph</span>
+  </div>
+  <div class="agent-badge">
+    <div class="dot"></div>
+    0x4a7f...c2e1 &nbsp;·&nbsp; ERC-8004 &nbsp;·&nbsp; Base Mainnet
+  </div>
+  <div class="header-right">
+    <div class="lock-badge" onclick="showLitModal()">
+      🔒 Lit-sealed &nbsp;·&nbsp; NFT access required
+    </div>
+  </div>
+</header>
+
+<div class="main">
+  <!-- LEFT LEGEND -->
+  <div class="legend">
+    <div>
+      <h3>Node types</h3>
+      <div class="legend-item" onclick="filterType('skill')">
+        <div class="legend-hex" style="background:var(--skill)"></div>
+        Skill
+      </div>
+      <div class="legend-item" onclick="filterType('tx')">
+        <div class="legend-diamond" style="background:var(--tx)"></div>
+        Onchain tx
+      </div>
+      <div class="legend-item" onclick="filterType('mem')">
+        <div class="legend-dot" style="background:var(--mem)"></div>
+        Memory
+      </div>
+      <div class="legend-item" onclick="filterType('rag')">
+        <div class="legend-ring" style="border-color:var(--rag)"></div>
+        RAG synthesis
+      </div>
+      <div class="legend-item" onclick="filterType('agent')">
+        <div class="legend-ring" style="border-color:var(--agent);width:14px;height:14px;border-width:3px"></div>
+        Agent identity
+      </div>
+    </div>
+
+    <div>
+      <h3>Graph stats</h3>
+      <div class="stat-row"><span>Nodes</span><span id="s-nodes">—</span></div>
+      <div class="stat-row"><span>Edges</span><span id="s-edges">—</span></div>
+      <div class="stat-row"><span>Skills</span><span>5</span></div>
+      <div class="stat-row"><span>Onchain txs</span><span>6</span></div>
+      <div class="stat-row"><span>Memory nodes</span><span>18</span></div>
+      <div class="stat-row"><span>RAG synth</span><span>5</span></div>
+    </div>
+
+    <div>
+      <h3>Provenance</h3>
+      <div style="font-size:10px;color:var(--dim);line-height:1.7">
+        Minted by agent<br>
+        <span style="color:var(--agent)">0x4a7f...c2e1</span><br>
+        Block #<span style="color:var(--tx)">18,443,201</span><br>
+        Base Sepolia<br>
+        <br>
+        NFT Token #<span style="color:var(--skill)">0001</span><br>
+        <span style="color:var(--dim)">ERC-721 · Rare Protocol</span>
+      </div>
+    </div>
+
+    <div>
+      <h3>Access</h3>
+      <div style="font-size:10px;color:var(--dim);line-height:1.7">
+        Graph topology:<br>
+        <span style="color:var(--mem)">Public</span><br>
+        <br>
+        Node content:<br>
+        <span style="color:var(--rag)">🔒 Lit-gated</span><br>
+        <br>
+        Unlock by holding<br>
+        NFT token #0001
+      </div>
+    </div>
+  </div>
+
+  <!-- GRAPH -->
+  <div id="graph">
+    <div id="searchbar">
+      <input type="text" placeholder="Search nodes..." oninput="searchNodes(this.value)" />
+    </div>
+    <svg id="canvas"></svg>
+    <div id="tooltip"></div>
+  </div>
+
+  <!-- RIGHT DETAIL PANEL -->
+  <div id="detail" class="hidden">
+    <div class="detail-header">
+      <span style="font-size:12px;font-weight:500">Node detail</span>
+      <span class="detail-close" onclick="closeDetail()">✕</span>
+    </div>
+    <div class="detail-body" id="detail-body"></div>
+  </div>
+</div>
+
+<div class="statusbar">
+  <span>Scroll to zoom · Drag to pan · Click node to inspect</span>
+  <span class="lit">🔒 Full content sealed via Lit Chipotle TEE</span>
+  <span style="margin-left:auto">x402 discoverable · Base Sepolia</span>
+</div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+
+const NODES = [
+  // AGENT IDENTITY (centre anchor)
+  { id:"agent_root", label:"Agent\n0x4a7f", type:"agent", r:22,
+    name:"AgentRAG Identity",
+    desc:"ERC-8004 on-chain agent identity. All skills, transactions, and research nodes are anchored to this identity on Base Mainnet.",
+    txHash:"0x4a7fc2e133d9...a8f2e1", sealed:false },
+
+  // SKILLS (hexagonal visually)
+  { id:"sk_scan_base", label:"scan_base\nchain", type:"skill", r:14,
+    name:"skill:scan_base_chain",
+    desc:"Scans Base chain for contract deployments, token transfers, and liquidity events. Outputs structured event logs.",
+    sealed:true },
+  { id:"sk_report", label:"generate\nreport", type:"skill", r:14,
+    name:"skill:generate_report",
+    desc:"Synthesises research nodes and trade signals into human-readable markdown reports with on-chain citations.",
+    sealed:true },
+  { id:"sk_token_signal", label:"token\nsignal", type:"skill", r:13,
+    name:"skill:token_signal_detector",
+    desc:"Monitors ERC-20 token volume, holder concentration, and price momentum on Base DEXes. Fires signal events.",
+    sealed:true },
+  { id:"sk_wallet_cluster", label:"wallet\ncluster", type:"skill", r:13,
+    name:"skill:wallet_cluster_analyzer",
+    desc:"Clusters wallets by co-transfer behaviour to identify coordinated accumulation or wash trading patterns.",
+    sealed:true },
+  { id:"sk_risk_score", label:"risk\nscore", type:"skill", r:13,
+    name:"skill:risk_score_calculator",
+    desc:"Computes a 0–100 risk score for a given wallet or token using on-chain behaviour heuristics.",
+    sealed:true },
+
+  // ONCHAIN TX (diamond shape via clip-path in D3)
+  { id:"tx_erc8004", label:"tx:ERC-8004\nreg", type:"tx", r:13,
+    name:"tx: ERC-8004 Registration",
+    desc:"Agent identity registration transaction on Base Mainnet.",
+    txHash:"0x9fa3e...44c1b2", block:"18,443,201", sealed:false },
+  { id:"tx_scan1", label:"tx:scan\ninvoke", type:"tx", r:11,
+    name:"tx: scan_base_chain invoked",
+    desc:"On-chain log of skill:scan_base_chain execution. Anchors the scan output to block height.",
+    txHash:"0xa1b2c...3d4e5f", block:"18,443,891", sealed:false },
+  { id:"tx_scan2", label:"tx:scan\nresult", type:"tx", r:11,
+    name:"tx: scan result anchored",
+    desc:"SHA-256 hash of scan output written on-chain as provenance proof.",
+    txHash:"0xf6e7d...8c9b0a", block:"18,444,012", sealed:false },
+  { id:"tx_rag_anchor", label:"tx:RAG\nanchor", type:"tx", r:13,
+    name:"tx: RAG bundle hash anchored",
+    desc:"Full encrypted RAG bundle SHA-256 anchored on-chain before NFT mint.",
+    txHash:"0x2e3f4...5a6b7c", block:"18,444,301", sealed:false },
+  { id:"tx_nft_mint", label:"tx:NFT\nmint", type:"tx", r:14,
+    name:"tx: NFT minted (Rare Protocol)",
+    desc:"ERC-721 token #0001 minted via Rare Protocol CLI on Base Sepolia. Agent managed gas from own wallet.",
+    txHash:"PLACEHOLDER — Base Sepolia mint tx", block:"PENDING", sealed:false },
+  { id:"tx_lit_seal", label:"tx:Lit\nseal", type:"tx", r:11,
+    name:"tx: Lit condition set",
+    desc:"Lit Protocol access condition linked to ERC-721 token #0001. Full bundle gated.",
+    txHash:"0x7d8e9...f0a1b2", block:"18,444,415", sealed:false },
+
+  // MEMORY NODES — Base ecosystem cluster
+  { id:"mem_aerodrome", label:"aerodrome\ntvl", type:"mem", r:10,
+    name:"mem: Aerodrome liquidity analysis",
+    desc:"Aerodrome DEX TVL trend over 30 days. Identifies dominant pools and ve(3,3) incentive distribution.",
+    sealed:true },
+  { id:"mem_base_tvl", label:"base_tvl\nq1_26", type:"mem", r:10,
+    name:"mem: Base TVL trend Q1 2026",
+    desc:"Total Value Locked on Base across all DeFi protocols, Jan–Mar 2026. Sourced from on-chain state.",
+    sealed:true },
+  { id:"mem_cbwallet", label:"coinbase\nwallet", type:"mem", r:10,
+    name:"mem: Coinbase Smart Wallet adoption",
+    desc:"ERC-4337 account abstraction adoption metrics on Base. Tracks daily active smart wallets.",
+    sealed:true },
+  { id:"mem_base_builders", label:"base\nbuilders", type:"mem", r:9,
+    name:"mem: Active Base builder count",
+    desc:"Weekly new contract deployments by unique deployer addresses. Proxy for ecosystem builder growth.",
+    sealed:true },
+  { id:"mem_base_fees", label:"base_fees\ntrend", type:"mem", r:9,
+    name:"mem: Base gas fee trend",
+    desc:"L2 base fee and blob fee trends post-EIP-4844. Impact on agent transaction cost modelling.",
+    sealed:true },
+
+  // MEMORY NODES — Token signal cluster
+  { id:"mem_brett", label:"brett\nvolume", type:"mem", r:10,
+    name:"mem: BRETT volume spike Mar 15",
+    desc:"Anomalous 3.2× volume spike on BRETT/WETH pair on Aerodrome. Correlated with whale wallet cluster.",
+    sealed:true },
+  { id:"mem_degen", label:"degen\nholders", type:"mem", r:10,
+    name:"mem: DEGEN holder distribution",
+    desc:"Top 100 DEGEN wallet concentration analysis. Gini coefficient computed from on-chain balance snapshot.",
+    sealed:true },
+  { id:"mem_toshi", label:"toshi\nsignals", type:"mem", r:9,
+    name:"mem: TOSHI signal log",
+    desc:"Hourly signal events emitted by skill:token_signal_detector for TOSHI over 7 days.",
+    sealed:true },
+  { id:"mem_higher", label:"higher\nmomentum", type:"mem", r:9,
+    name:"mem: HIGHER price momentum",
+    desc:"Momentum indicator computed from on-chain swap price impact. Used as risk model input.",
+    sealed:true },
+
+  // MEMORY NODES — Risk patterns cluster
+  { id:"mem_washtrading", label:"wash\npatterns", type:"mem", r:10,
+    name:"mem: Wash trading pattern index",
+    desc:"Identified 14 wallet clusters exhibiting circular transfer behaviour on Base Sepolia in Q1 2026.",
+    sealed:true },
+  { id:"mem_rug_signals", label:"rug\nsignals", type:"mem", r:10,
+    name:"mem: Rug signal taxonomy",
+    desc:"Taxonomy of 8 common rug-pull signal patterns identified from on-chain post-mortems.",
+    sealed:true },
+  { id:"mem_whale_map", label:"whale\nmap", type:"mem", r:10,
+    name:"mem: Whale wallet address map",
+    desc:"Cluster of 23 wallets identified as coordinated accumulators across 4 Base tokens.",
+    sealed:true },
+  { id:"mem_risk_calibration", label:"risk\ncalib", type:"mem", r:9,
+    name:"mem: Risk model calibration data",
+    desc:"Backtest results for skill:risk_score_calculator against 90-day historical Base chain data.",
+    sealed:true },
+
+  // RAG SYNTHESIS NODES (large, centre connectors)
+  { id:"rag_base_intel", label:"rag:base\nintelligence", type:"rag", r:18,
+    name:"rag: Base DeFi Intelligence v1",
+    desc:"Synthesised knowledge graph of Base DeFi ecosystem. Combines TVL trends, token signals, and wallet clustering.",
+    sealed:true },
+  { id:"rag_wallet_risk", label:"rag:wallet\nrisk_model", type:"rag", r:17,
+    name:"rag: Wallet Risk Model v1",
+    desc:"Trained risk model combining wash-trading patterns, whale maps, and rug signal taxonomy.",
+    sealed:true },
+  { id:"rag_skill_index", label:"rag:skill\nindex", type:"rag", r:16,
+    name:"rag: Agent Skill Index",
+    desc:"Master index of all deployed skills: schemas, invocation logs, success rates, and output hash proofs.",
+    sealed:true },
+  { id:"rag_base_ecosystem", label:"rag:base\necosystem", type:"rag", r:15,
+    name:"rag: Base Ecosystem Map",
+    desc:"Entity-relationship map of Base projects, builders, and protocols. 47 entities, 93 relationships.",
+    sealed:true },
+  { id:"rag_agent_memory", label:"rag:agent\nmemory", type:"rag", r:15,
+    name:"rag: Agent Long-Term Memory",
+    desc:"Structured memory log of all agent decisions, skill invocations, and research sessions since genesis.",
+    sealed:true },
+];
+
+const LINKS = [
+  // Agent → skills
+  {s:"agent_root",t:"sk_scan_base"}, {s:"agent_root",t:"sk_report"},
+  {s:"agent_root",t:"sk_token_signal"}, {s:"agent_root",t:"sk_wallet_cluster"},
+  {s:"agent_root",t:"sk_risk_score"},
+  // Agent → onchain anchors
+  {s:"agent_root",t:"tx_erc8004"}, {s:"agent_root",t:"tx_rag_anchor"},
+  {s:"agent_root",t:"tx_nft_mint"},
+  // Skills → tx
+  {s:"sk_scan_base",t:"tx_scan1"}, {s:"tx_scan1",t:"tx_scan2"},
+  {s:"sk_scan_base",t:"mem_aerodrome"}, {s:"sk_scan_base",t:"mem_base_tvl"},
+  {s:"sk_scan_base",t:"mem_base_fees"}, {s:"sk_scan_base",t:"mem_base_builders"},
+  // Lit seal
+  {s:"tx_nft_mint",t:"tx_lit_seal"}, {s:"tx_rag_anchor",t:"tx_lit_seal"},
+  // Token signal skill → mem
+  {s:"sk_token_signal",t:"mem_brett"}, {s:"sk_token_signal",t:"mem_degen"},
+  {s:"sk_token_signal",t:"mem_toshi"}, {s:"sk_token_signal",t:"mem_higher"},
+  // Wallet cluster → risk
+  {s:"sk_wallet_cluster",t:"mem_washtrading"}, {s:"sk_wallet_cluster",t:"mem_whale_map"},
+  {s:"sk_risk_score",t:"mem_rug_signals"}, {s:"sk_risk_score",t:"mem_risk_calibration"},
+  // Coinbase wallet mem
+  {s:"sk_scan_base",t:"mem_cbwallet"},
+  // RAG synth ← mem
+  {s:"mem_aerodrome",t:"rag_base_intel"}, {s:"mem_base_tvl",t:"rag_base_intel"},
+  {s:"mem_brett",t:"rag_base_intel"}, {s:"mem_degen",t:"rag_base_intel"},
+  {s:"mem_washtrading",t:"rag_wallet_risk"}, {s:"mem_whale_map",t:"rag_wallet_risk"},
+  {s:"mem_rug_signals",t:"rag_wallet_risk"}, {s:"mem_risk_calibration",t:"rag_wallet_risk"},
+  {s:"mem_base_builders",t:"rag_base_ecosystem"}, {s:"mem_cbwallet",t:"rag_base_ecosystem"},
+  {s:"mem_base_fees",t:"rag_base_ecosystem"},
+  // RAG synth ← skills
+  {s:"sk_scan_base",t:"rag_skill_index"}, {s:"sk_report",t:"rag_skill_index"},
+  {s:"sk_token_signal",t:"rag_skill_index"}, {s:"sk_wallet_cluster",t:"rag_skill_index"},
+  {s:"sk_risk_score",t:"rag_skill_index"},
+  // RAG memory ← all mem
+  {s:"mem_toshi",t:"rag_agent_memory"}, {s:"mem_higher",t:"rag_agent_memory"},
+  {s:"mem_base_tvl",t:"rag_agent_memory"},
+  // RAG cross-links
+  {s:"rag_wallet_risk",t:"rag_base_intel"}, {s:"rag_skill_index",t:"rag_base_intel"},
+  {s:"rag_base_ecosystem",t:"rag_base_intel"}, {s:"rag_agent_memory",t:"rag_base_intel"},
+  // Anchor RAG to tx
+  {s:"rag_base_intel",t:"tx_rag_anchor"}, {s:"rag_skill_index",t:"tx_rag_anchor"},
+  {s:"rag_agent_memory",t:"tx_rag_anchor"},
+  // Report skill → RAG
+  {s:"sk_report",t:"rag_base_intel"}, {s:"sk_report",t:"rag_agent_memory"},
+];
+
+// ─── COLOUR MAP ───────────────────────────────────────────────────────────────
+const COL = {
+  skill: "#7c6af7", tx: "#f0a040", mem: "#3ec9a7", rag: "#e05c7a", agent: "#4ea8f0"
+};
+const GLOW = {
+  skill: "rgba(124,106,247,0.35)", tx: "rgba(240,160,64,0.35)",
+  mem: "rgba(62,201,167,0.25)", rag: "rgba(224,92,122,0.35)", agent: "rgba(78,168,240,0.35)"
+};
+
+// ─── D3 SETUP ─────────────────────────────────────────────────────────────────
+const svg = d3.select("#canvas");
+const g = svg.append("g");
+
+const tooltip = document.getElementById("tooltip");
+const detail = document.getElementById("detail");
+const detailBody = document.getElementById("detail-body");
+
+document.getElementById("s-nodes").textContent = NODES.length;
+document.getElementById("s-edges").textContent = LINKS.length;
+
+const links = LINKS.map(l => ({source: l.s, target: l.t}));
+
+const sim = d3.forceSimulation(NODES)
+  .force("link", d3.forceLink(links).id(d => d.id).distance(d => {
+    const s = d.source, t = d.target;
+    if (s.type === "agent" || t.type === "agent") return 120;
+    if (s.type === "rag" || t.type === "rag") return 90;
+    if (s.type === "tx" || t.type === "tx") return 70;
+    return 65;
+  }).strength(0.4))
+  .force("charge", d3.forceManyBody().strength(d => {
+    if (d.type === "agent") return -500;
+    if (d.type === "rag") return -280;
+    return -120;
+  }))
+  .force("collision", d3.forceCollide().radius(d => d.r + 10))
+  .force("center", d3.forceCenter(0, 0))
+  .force("x", d3.forceX(0).strength(0.03))
+  .force("y", d3.forceY(0).strength(0.03));
+
+// Link layer
+const linkSel = g.append("g")
+  .selectAll("line")
+  .data(links)
+  .enter().append("line")
+  .attr("class", "link");
+
+// Node layer
+const nodeG = g.append("g")
+  .selectAll("g")
+  .data(NODES)
+  .enter().append("g")
+  .attr("class", "node-circle")
+  .call(d3.drag()
+    .on("start", (event, d) => {
+      if (!event.active) sim.alphaTarget(0.3).restart();
+      d.fx = d.x; d.fy = d.y;
+    })
+    .on("drag", (event, d) => { d.fx = event.x; d.fy = event.y; })
+    .on("end", (event, d) => {
+      if (!event.active) sim.alphaTarget(0);
+      d.fx = null; d.fy = null;
+    })
+  )
+  .on("mouseover", (event, d) => showTooltip(event, d))
+  .on("mousemove", (event) => moveTooltip(event))
+  .on("mouseout", () => hideTooltip())
+  .on("click", (event, d) => { event.stopPropagation(); showDetail(d); });
+
+// Draw node shapes by type
+nodeG.each(function(d) {
+  const el = d3.select(this);
+  const c = COL[d.type];
+  const r = d.r;
+
+  if (d.type === "skill") {
+    // Hexagon
+    const pts = Array.from({length:6}, (_,i) => {
+      const a = Math.PI/180 * (60*i - 30);
+      return [r*Math.cos(a), r*Math.sin(a)].join(",");
+    }).join(" ");
+    el.append("polygon")
+      .attr("points", pts)
+      .attr("fill", c)
+      .attr("fill-opacity", 0.25)
+      .attr("stroke", c)
+      .attr("stroke-width", 1.5);
+  } else if (d.type === "tx") {
+    // Diamond
+    el.append("rect")
+      .attr("x", -r*0.75).attr("y", -r*0.75)
+      .attr("width", r*1.5).attr("height", r*1.5)
+      .attr("transform", "rotate(45)")
+      .attr("fill", c)
+      .attr("fill-opacity", 0.25)
+      .attr("stroke", c)
+      .attr("stroke-width", 1.5);
+  } else if (d.type === "rag") {
+    // Double ring
+    el.append("circle").attr("r", r+4)
+      .attr("fill", "none").attr("stroke", c).attr("stroke-width", 0.7).attr("stroke-dasharray","3 3").attr("stroke-opacity",0.5);
+    el.append("circle").attr("r", r)
+      .attr("fill", c).attr("fill-opacity", 0.18)
+      .attr("stroke", c).attr("stroke-width", 1.5);
+  } else if (d.type === "agent") {
+    // Triple ring
+    el.append("circle").attr("r", r+8)
+      .attr("fill", "none").attr("stroke", c).attr("stroke-width", 0.5).attr("stroke-dasharray","4 4").attr("stroke-opacity",0.3);
+    el.append("circle").attr("r", r+3)
+      .attr("fill", "none").attr("stroke", c).attr("stroke-width", 0.8).attr("stroke-opacity",0.5);
+    el.append("circle").attr("r", r)
+      .attr("fill", c).attr("fill-opacity", 0.2)
+      .attr("stroke", c).attr("stroke-width", 2);
+  } else {
+    // mem — simple circle
+    el.append("circle").attr("r", r)
+      .attr("fill", c).attr("fill-opacity", 0.2)
+      .attr("stroke", c).attr("stroke-width", 1);
+  }
+
+  // Label
+  const lines = d.label.split("\n");
+  const labelG = el.append("text").attr("class","node-label");
+  lines.forEach((line, i) => {
+    labelG.append("tspan")
+      .attr("x", 0)
+      .attr("dy", i === 0 ? (lines.length > 1 ? "-0.3em" : "0.35em") : "1.1em")
+      .text(line);
+  });
+
+  // Sealed indicator
+  if (d.sealed) {
+    el.append("text")
+      .attr("x", r - 4).attr("y", -r + 4)
+      .attr("font-size", "8px")
+      .attr("text-anchor","middle")
+      .attr("fill","rgba(224,92,122,0.8)")
+      .text("🔒");
+  }
+});
+
+// Sim tick
+sim.on("tick", () => {
+  linkSel
+    .attr("x1", d => d.source.x).attr("y1", d => d.source.y)
+    .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+  nodeG.attr("transform", d => `translate(${d.x},${d.y})`);
+});
+
+// ─── ZOOM / PAN ───────────────────────────────────────────────────────────────
+const zoom = d3.zoom()
+  .scaleExtent([0.2, 4])
+  .on("zoom", e => g.attr("transform", e.transform));
+
+svg.call(zoom);
+
+// Centre on load
+function centreGraph() {
+  const w = document.getElementById("graph").offsetWidth;
+  const h = document.getElementById("graph").offsetHeight;
+  svg.call(zoom.transform, d3.zoomIdentity.translate(w/2, h/2).scale(0.85));
+}
+setTimeout(centreGraph, 100);
+
+// Click on background → close detail
+svg.on("click", () => closeDetail());
+
+// ─── TOOLTIP ──────────────────────────────────────────────────────────────────
+function showTooltip(event, d) {
+  const c = COL[d.type];
+  tooltip.innerHTML = `
+    <div class="tt-type" style="color:${c}">${d.type.toUpperCase()}</div>
+    <div class="tt-name">${d.name}</div>
+    <div class="tt-desc">${d.desc.slice(0, 90)}…</div>
+    ${d.sealed ? '<div class="tt-sealed">🔒 Content sealed · NFT required to read</div>' : ''}
+    ${d.txHash && !d.sealed ? `<div class="tt-tx">${d.txHash}</div>` : ''}
+  `;
+  tooltip.classList.add("visible");
+  moveTooltip(event);
+}
+function moveTooltip(event) {
+  const gr = document.getElementById("graph").getBoundingClientRect();
+  let x = event.clientX - gr.left + 14;
+  let y = event.clientY - gr.top + 14;
+  if (x + 270 > gr.width) x = event.clientX - gr.left - 274;
+  tooltip.style.left = x + "px";
+  tooltip.style.top = y + "px";
+}
+function hideTooltip() { tooltip.classList.remove("visible"); }
+
+// ─── DETAIL PANEL ─────────────────────────────────────────────────────────────
+function showDetail(d) {
+  const c = COL[d.type];
+  detailBody.innerHTML = `
+    <div class="detail-type" style="color:${c}">${d.type.toUpperCase()}</div>
+    <div class="detail-name">${d.name}</div>
+    <div class="detail-desc">${d.desc}</div>
+    ${d.type === "tx" || d.type === "agent" ? `
+      <div class="detail-field">
+        <label>TX Hash</label>
+        <div class="val">${d.txHash || "—"}</div>
+      </div>
+      ${d.block ? `<div class="detail-field"><label>Block</label><div class="val">${d.block}</div></div>` : ""}
+    ` : ""}
+    ${d.sealed ? `
+      <div class="sealed-block">
+        <div class="seal-title">🔒 Content sealed by Lit Protocol</div>
+        <div class="seal-desc">Full node content is encrypted via Lit Chipotle TEE. Access requires owning ERC-721 token #0001 minted by this agent.</div>
+      </div>
+    ` : ""}
+    ${d.type === "skill" ? `
+      <div class="detail-field" style="margin-top:14px">
+        <label>Invocations anchored</label>
+        <div class="val" style="color:var(--tx)">On-chain via Base Sepolia</div>
+      </div>
+    ` : ""}
+  `;
+  detail.classList.remove("hidden");
+
+  // Highlight connected links
+  const connected = new Set([d.id]);
+  links.forEach(l => {
+    if (l.source.id === d.id || l.target.id === d.id) {
+      connected.add(l.source.id);
+      connected.add(l.target.id);
+    }
+  });
+  linkSel.classed("highlighted", l =>
+    l.source.id === d.id || l.target.id === d.id
+  );
+  nodeG.selectAll(".node-label").classed("selected", nd => nd.id === d.id);
+}
+
+function closeDetail() {
+  detail.classList.add("hidden");
+  linkSel.classed("highlighted", false);
+  nodeG.selectAll(".node-label").classed("selected", false);
+}
+
+// ─── FILTER BY TYPE ───────────────────────────────────────────────────────────
+let activeFilter = null;
+function filterType(type) {
+  if (activeFilter === type) {
+    activeFilter = null;
+    nodeG.style("opacity", 1);
+    linkSel.style("opacity", 1);
+  } else {
+    activeFilter = type;
+    nodeG.style("opacity", d => d.type === type ? 1 : 0.15);
+    linkSel.style("opacity", l =>
+      l.source.type === type || l.target.type === type ? 0.6 : 0.05
+    );
+  }
+}
+
+// ─── SEARCH ───────────────────────────────────────────────────────────────────
+function searchNodes(q) {
+  q = q.toLowerCase().trim();
+  if (!q) {
+    nodeG.style("opacity", 1);
+    linkSel.style("opacity", 1);
+    return;
+  }
+  const matched = new Set(
+    NODES.filter(d => d.name.toLowerCase().includes(q) || d.label.toLowerCase().includes(q)).map(d => d.id)
+  );
+  nodeG.style("opacity", d => matched.has(d.id) ? 1 : 0.1);
+  linkSel.style("opacity", l =>
+    matched.has(l.source.id) && matched.has(l.target.id) ? 0.5 : 0.03
+  );
+}
+
+// ─── LIT MODAL ────────────────────────────────────────────────────────────────
+function showLitModal() {
+  const m = document.createElement("div");
+  m.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:flex;align-items:center;justify-content:center";
+  m.innerHTML = `
+    <div style="background:#161a22;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:28px 32px;max-width:380px;font-family:inherit">
+      <div style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--rag);margin-bottom:10px">🔒 Lit Protocol — Chipotle TEE</div>
+      <div style="font-size:16px;font-weight:600;color:#e8e6e0;margin-bottom:12px">Full content is sealed</div>
+      <div style="font-size:12px;color:#6b7280;line-height:1.7;margin-bottom:18px">
+        This knowledge graph's node content, skill logic, decision logs, and trade history are encrypted inside a Lit Chipotle TEE Lit Action.<br><br>
+        To decrypt, you must hold <span style="color:var(--tx)">ERC-721 token #0001</span> in your wallet. The Lit Action verifies ownership on-chain before releasing any content.
+      </div>
+      <div style="font-size:10px;color:#3d4452;margin-bottom:16px;word-break:break-all">
+        Lit condition hash: 0x8f3a...b2c1d (stored on IPFS)<br>
+        Access condition: ownerOf(#0001) == caller
+      </div>
+      <button onclick="this.closest('div[style]').remove()" style="background:rgba(224,92,122,0.15);border:1px solid rgba(224,92,122,0.3);color:var(--rag);padding:8px 20px;border-radius:6px;font-family:inherit;font-size:12px;cursor:pointer">
+        Close
+      </button>
+    </div>
+  `;
+  m.addEventListener("click", e => { if(e.target===m) m.remove(); });
+  document.body.appendChild(m);
+}
+</script>
+</body>
+</html>
