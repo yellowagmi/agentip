@@ -255,6 +255,7 @@ This project is submitted to:
 3. **Let the Agent Cook — No Humans Required** — Complete autonomous loop: receive → validate → structure → encrypt → mint → list
 4. **Synthesis Open Track** — Touches all four themes: Pay (x402), Trust (ERC-8004 + receipts), Cooperate (fork/derivative lineage), Secrets (Lit Protocol gating)
 5. **SuperRare Partner Track** — NFT minted via Rare Protocol with agent-driven on-chain mechanics
+6. **Dark Knowledge Skills — Lit Chipotle** — Lit Action with NFT ownership gating, `decryptAndCombine()` for sealed workflow IP, knowledge moat architecture
 
 ---
 
