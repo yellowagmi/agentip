@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgentIP — Discovery Marketplace</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #141820; overflow: hidden; }
+  #root { width: 100vw; height: 100vh; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+// Make React hooks available globally for Babel-transpiled JSX
+const { useState, useEffect, useRef } = React;
+</script>
+<script>
+// Load JSX, strip import/export, transpile, and mount
+fetch('agentip-discovery.jsx')
+  .then(r => r.text())
+  .then(jsx => {
+    // Strip ES module syntax
+    let code = jsx
+      .replace(/^import\s+.*?;\s*$/gm, '')
+      .replace(/^export\s+default\s+/gm, '');
+
+    // Transpile JSX with Babel
+    const result = Babel.transform(code, {
+      presets: ['react'],
+      filename: 'agentip-discovery.jsx'
+    });
+
+    // Execute transpiled code
+    const script = document.createElement('script');
+    script.textContent = result.code;
+    document.body.appendChild(script);
+
+    // Mount React app
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(React.createElement(AgentIPDiscovery));
+  })
+  .catch(err => {
+    document.getElementById('root').innerHTML =
+      '<div style="color:#ff6b6b;padding:40px;font-family:monospace">' +
+      '<h2>Failed to load UI</h2><pre>' + err.message + '</pre></div>';
+  });
+</script>
+</body>
+</html>
