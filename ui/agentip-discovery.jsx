@@ -379,8 +379,155 @@ function genBundle002() {
   return { nodes, edges };
 }
 
-const BUNDLES = [
-  {
+function genBundle003() {
+  const nodes = [
+    // Skills (5)
+    N("ps1","skill","polymarket_scanner",true,10),
+    N("ps2","skill","odds_calculator",true,10),
+    N("ps3","skill","bankroll_manager",true,9),
+    N("ps4","skill","sentiment_analyzer",true,9),
+    N("ps5","skill","exit_strategy",true,8),
+    // Memory: public (14)
+    N("pm1","memory","Polymarket BTC 23 markets",true,6),
+    N("pm2","memory","BTC $91,240 current",true,6),
+    N("pm3","memory","BTC >$95K Apr 15 @ $0.62",true,5),
+    N("pm4","memory","BTC >$100K Apr 20 @ $0.41",true,5),
+    N("pm5","memory","BTC >$110K Apr 30 @ $0.18",true,5),
+    N("pm6","memory","BTC <$80K Apr 15 @ $0.08",true,4),
+    N("pm7","memory","ETF inflows >$1B Apr @ $0.55",true,5),
+    N("pm8","memory","BTC dom >60% Apr @ $0.47",true,4),
+    N("pm9","memory","Fear & Greed: 61 (Greed)",true,4),
+    N("pm10","memory","RSI 14d: 58 (neutral)",true,4),
+    N("pm11","memory","IV 51% vs RV 42%",true,4),
+    N("pm12","memory","ETF inflows March +$2.8B",true,5),
+    N("pm13","memory","Exchange bal 2.31M BTC",true,4),
+    N("pm14","memory","Fed rate 4.25%, FOMC Apr 2",true,4),
+    // Memory: gated (22)
+    N("gm1","memory","model weights v3.2",false,7),
+    N("gm2","memory","Brier score 0.128",false,6),
+    N("gm3","memory","exchange flow weight 0.14",false,5),
+    N("gm4","memory","ETF acceleration weight 0.12",false,5),
+    N("gm5","memory","IV-RV spread weight 0.11",false,5),
+    N("gm6","memory","whale cluster weight 0.10",false,5),
+    N("gm7","memory","CT momentum weight 0.08",false,4),
+    N("gm8","memory","macro regime weight 0.08",false,4),
+    N("gm9","memory","options skew weight 0.07",false,4),
+    N("gm10","memory","Kelly multiplier 0.27",false,6),
+    N("gm11","memory","correlation haircut 0.45",false,5),
+    N("gm12","memory","drawdown breaker 25%",false,5),
+    N("gm13","memory","entry: edge >8% + conf >0.65",false,6),
+    N("gm14","memory","exit: edge <2% → close",false,5),
+    N("gm15","memory","position log: 31 trades",false,6),
+    N("gm16","memory","win rate 71% (22/31)",false,5),
+    N("gm17","memory","$100 → $847 in 30d",false,7),
+    N("gm18","memory","max drawdown -22.4%",false,5),
+    N("gm19","memory","profit factor 4.8",false,5),
+    N("gm20","memory","Sortino ratio 3.21",false,5),
+    N("gm21","memory","edge decay: 11% → 7.8%",false,4),
+    N("gm22","memory","ruin probability 3.2%",false,5),
+    // Reports (2)
+    N("rp1","report","Strategy Overview",true,9),
+    N("rp2","report","Risk Assessment",false,10),
+    // Receipts (5)
+    N("tx1","receipt","tx_pred_scan1",true,5),
+    N("tx2","receipt","tx_pred_odds1",true,5),
+    N("tx3","receipt","tx_pred_position1",true,5),
+    N("tx4","receipt","tx_pred_sentiment1",true,5),
+    N("tx5","receipt","tx_pred_report",true,5),
+    // RAG (2)
+    N("rg1","rag","Entry signal context",true,5),
+    N("rg2","rag","Bankroll mgmt context",false,6),
+    // Context: public data sources (52)
+    ...["Polymarket API","Kalshi markets","Metaculus forecasts",
+      "CoinGecko BTC","CoinMarketCap","TradingView BTC",
+      "Deribit options","Binance futures","Bybit perps","OKX derivatives",
+      "CME BTC futures","BitMEX funding","dYdX open interest",
+      "Glassnode on-chain","CryptoQuant flows","IntoTheBlock","Santiment signals",
+      "Coinalyze OI","Skew analytics","Laevitas options",
+      "Fear & Greed Index","Alt season index","BTC dominance chart",
+      "DXY index feed","Fed funds tracker","CME FedWatch","Treasury yields",
+      "S&P 500 correlation","VIX index","Gold price feed",
+      "DefiLlama TVL","L2Beat rollups","Token Terminal",
+      "Etherscan Base","BaseScan","Blockscout",
+      "Whale Alert","Arkham Intel","Nansen labels",
+      "BTC ETF tracker","Farside data","Bloomberg ETF",
+      "Reddit r/bitcoin","r/cryptocurrency","Farcaster casts",
+      "CT sentiment feed","LunarCrush social","Telegram signals",
+      "Messari research","The Block data","CoinDesk news",
+      "Decrypt news"
+    ].map((l,i) => N(`cp${i}`,"memory",l,true,3)),
+    // Context: gated analytics (45)
+    ...["Bayesian prior calibration","log-normal distribution fit",
+      "180d rolling window params","sentiment decay function",
+      "contrarian signal model","regime detection algo",
+      "Brier score history","calibration curve v3.2",
+      "factor correlation matrix","weight optimization log",
+      "backtest engine results","Monte Carlo sim (10K)",
+      "ruin probability model","geometric growth optimizer",
+      "Kelly fraction tuning","drawdown recovery analysis",
+      "position sizing formula","correlation penalty model",
+      "bankroll tier transitions","survival mode params",
+      "entry signal classifier","exit signal classifier",
+      "edge decay regression","market efficiency trend",
+      "liquidity depth model","slippage estimator",
+      "bid-ask spread predictor","order book analyzer",
+      "whale movement decoder","exchange flow momentum",
+      "miner outflow tracker","ETF flow acceleration",
+      "options skew interpreter","put-call ratio model",
+      "funding rate signal","IV-RV spread model",
+      "macro regime classifier","risk-on/off detector",
+      "DXY correlation model","Fed guidance parser",
+      "narrative momentum tracker","CT influence graph",
+      "Farcaster quality filter","smart money flow net",
+      "position P&L attribution"
+    ].map((l,i) => N(`cg${i}`,"memory",l,false,3)),
+  ];
+
+  const edges = [
+    // Skill → public memory
+    "ps1→pm1","ps1→pm3","ps1→pm4","ps1→pm5","ps1→pm6","ps1→pm7","ps1→pm8",
+    "ps4→pm2","ps4→pm9","ps4→pm10","ps4→pm11","ps4→pm12","ps4→pm13","ps4→pm14",
+    // Skill → gated memory
+    "ps2→gm1","ps2→gm2","ps2→gm3","ps2→gm4","ps2→gm5","ps2→gm6","ps2→gm7","ps2→gm8","ps2→gm9",
+    "ps3→gm10","ps3→gm11","ps3→gm12","ps3→gm13","ps3→gm14",
+    "ps3→gm15","ps3→gm16","ps3→gm17","ps3→gm18","ps3→gm19","ps3→gm20",
+    "ps5→gm14","ps5→gm21","ps5→gm22",
+    // Cross-skill
+    "ps2→ps3","ps2→ps5","ps1→ps2","ps4→ps2",
+    // Memory → reports
+    "pm1→rp1","pm2→rp1","pm3→rp1","gm1→rp2","gm15→rp2","gm17→rp2","gm18→rp2","gm22→rp2",
+    // Receipts → skills
+    "tx1→ps1","tx2→ps2","tx3→ps3","tx4→ps4","tx5→rp1","tx5→rp2",
+    // RAG
+    "ps1→rg1","ps2→rg1","pm1→rg1","ps3→rg2","gm10→rg2","gm15→rg2",
+    // Public context → skills
+    ...["cp0","cp1","cp2"].map(c=>`${c}→ps1`),
+    ...["cp3","cp4","cp5","cp6","cp7","cp8","cp9","cp10","cp11","cp12",
+       "cp13","cp14","cp15","cp16","cp17","cp18","cp19"].map(c=>`${c}→ps2`),
+    ...["cp20","cp21","cp22","cp23","cp24","cp25","cp26","cp27","cp28","cp29",
+       "cp41","cp42","cp43","cp44","cp45","cp46"].map(c=>`${c}→ps4`),
+    ...["cp30","cp31","cp32","cp33","cp34","cp35"].map(c=>`${c}→ps5`),
+    ...["cp36","cp37","cp38","cp39","cp40"].map(c=>`${c}→ps3`),
+    ...["cp47","cp48","cp49","cp50","cp51"].map(c=>`${c}→pm2`),
+    // Gated analytics → gated memory
+    ...["cg0","cg1","cg2","cg3","cg4","cg5","cg6","cg7","cg8","cg9"].map(c=>`${c}→gm1`),
+    ...["cg10","cg11","cg12","cg13"].map(c=>`${c}→gm17`),
+    ...["cg14","cg15","cg16","cg17","cg18","cg19"].map(c=>`${c}→gm10`),
+    ...["cg20","cg21","cg22","cg23"].map(c=>`${c}→gm13`),
+    ...["cg24","cg25","cg26","cg27"].map(c=>`${c}→gm21`),
+    ...["cg28","cg29","cg30","cg31"].map(c=>`${c}→gm3`),
+    ...["cg32","cg33","cg34","cg35"].map(c=>`${c}→gm9`),
+    ...["cg36","cg37","cg38","cg39"].map(c=>`${c}→gm8`),
+    ...["cg40","cg41","cg42","cg43"].map(c=>`${c}→gm7`),
+    "cg44→gm19",
+  ].map(s => { const [a,b]=s.split("→"); return E(a,b); });
+
+  return { nodes, edges };
+}
+
+// Local bundle definitions (always shown)
+const LOCAL_BUNDLES = {
+  bundle_001: {
     bundleId: "bundle_001", name: "Base DeFi Intelligence v1", category: "defi-research",
     creator: { agentName: "AgentRAG", erc8004Identity: "0x87DA...cE66" },
     tags: ["base","defi","aerodrome","whale-tracking","wash-trading","token-signals","mev","risk"],
@@ -391,7 +538,7 @@ const BUNDLES = [
     graph: genBundle001(),
     auctionState: "discoverable", currentBid: null, bidCount: 0,
   },
-  {
+  bundle_002: {
     bundleId: "bundle_002", name: "ETH/USDC Momentum Strategy v2", category: "trading-strategy",
     creator: { agentName: "TradingBot-Alpha", erc8004Identity: "0xABCD...1234" },
     tags: ["trading","aerodrome","momentum","base","eth-usdc","backtest"],
@@ -402,7 +549,22 @@ const BUNDLES = [
     graph: genBundle002(),
     auctionState: "discoverable", currentBid: null, bidCount: 0,
   },
-];
+  bundle_003: {
+    bundleId: "bundle_003", name: "Prediction Market 5m BTC $10-$100K in 30 Days", category: "prediction-market",
+    creator: { agentName: "PredBot-Alpha", erc8004Identity: "0x5aE9...0d2" },
+    tags: ["btc","polymarket","prediction-market","kelly-criterion","low-capital","sentiment","bayesian"],
+    summary: "Automated prediction market strategy: Polymarket BTC binary outcomes, Bayesian probability model (Brier 0.128), fractional Kelly sizing, multi-source sentiment. $100 → $847 in 30 days. 5 skills, 31 trades, 71% win rate, Sortino 3.21.",
+    provenance: { receipts: 5, network: "base-sepolia" },
+    nft: { tokenId: "3", contract: "0x3CcB...3E8dB" },
+    listedAt: "2026-03-23T08:00:00Z",
+    graph: genBundle003(),
+    auctionState: "listed", saleType: "secondary", buyNowPrice: "0.0001", buyNowCurrency: "ETH",
+    currentBid: null, bidCount: 0,
+  },
+};
+
+// Default bundles (before API fetch)
+const DEFAULT_BUNDLES = [LOCAL_BUNDLES.bundle_001, LOCAL_BUNDLES.bundle_002];
 
 // ── Knowledge Graph ───────────────────────────────────────────────────
 function KnowledgeGraph({ bundle, width, height }) {
@@ -593,9 +755,15 @@ function BundleCard({ bundle, selected, onSelect }) {
         fontSize:9,fontFamily:"'JetBrains Mono',monospace",
       }}>
         <span style={{ color:C.textMuted }}>
-          NFT #{bundle.nft.tokenId} · {bundle.provenance.receipts} on-chain receipts
+          NFT #{bundle.nft.tokenId} · {bundle.provenance.receipts} receipts
         </span>
-        <span style={{ color:C.accent }}>{v} public · {g} gated</span>
+        {bundle.saleType === "secondary" ? (
+          <span style={{ color:C.green, fontWeight:700 }}>
+            ◆ {bundle.buyNowPrice} {bundle.buyNowCurrency} · Buy Now
+          </span>
+        ) : (
+          <span style={{ color:C.accent }}>{v} public · {g} gated</span>
+        )}
       </div>
     </div>
   );
@@ -684,6 +852,8 @@ function ApiPanel({ show }) {
     { m:"POST",p:"/package",pr:"$5.00",d:"Package workflow → NFT" },
     { m:"POST",p:"/validate",pr:"$0.50",d:"Validate receipts" },
     { m:"GET",p:"/access/:id",pr:"NFT",d:"Full bundle (token-gated)" },
+    { m:"POST",p:"/buy/:id",pr:"ETH",d:"Buy bundle (secondary)" },
+    { m:"GET",p:"/download/:id",pr:"token",d:"Download bundle files" },
   ];
   return (
     <div style={{ background:C.surfaceAlt,border:`1px solid ${C.border}`,borderRadius:8,padding:10,marginTop:8 }}>
@@ -704,12 +874,36 @@ function ApiPanel({ show }) {
 
 // ── Main ──────────────────────────────────────────────────────────────
 export default function AgentIPDiscovery() {
-  const [sel, setSel] = useState(BUNDLES[0]);
+  const [bundles, setBundles] = useState(DEFAULT_BUNDLES);
+  const [sel, setSel] = useState(DEFAULT_BUNDLES[0]);
   const [q, setQ] = useState("");
   const [sr, setSr] = useState(null);
   const [showApi, setShowApi] = useState(false);
   const containerRef = useRef(null);
   const [dims, setDims] = useState({ w: 900, h: 600 });
+
+  // Fetch bundles from API and merge with local graph data
+  useEffect(() => {
+    fetch("/catalog")
+      .then(r => r.json())
+      .then(data => {
+        const apiIds = new Set(data.bundles.map(b => b.bundleId));
+        // Build bundle list: API bundles with local graph data, plus bundle_002 (JSX-only)
+        const merged = data.bundles.map(ab => {
+          const local = LOCAL_BUNDLES[ab.bundleId];
+          if (local) return { ...local, ...{ saleType: ab.saleType, buyNowPrice: ab.buyNowPrice, buyNowCurrency: ab.buyNowCurrency, status: ab.status } };
+          // Unknown bundle from API — use minimal data
+          return { bundleId: ab.bundleId, name: ab.name, category: ab.category, creator: ab.creator, tags: ab.tags || [], summary: ab.summary || "", provenance: ab.provenance || { receipts: 0, network: "base-sepolia" }, nft: ab.nft || { tokenId: "?", contract: "?" }, listedAt: ab.listedAt, graph: { nodes: [], edges: [] }, auctionState: ab.status || "listed", saleType: ab.saleType, buyNowPrice: ab.buyNowPrice, buyNowCurrency: ab.buyNowCurrency, currentBid: null, bidCount: 0 };
+        });
+        // Always include bundle_002 (JSX-only, not in API)
+        if (!apiIds.has("bundle_002")) merged.push(LOCAL_BUNDLES.bundle_002);
+        // Sort by listedAt
+        merged.sort((a, b) => new Date(a.listedAt) - new Date(b.listedAt));
+        setBundles(merged);
+        setSel(merged[0]);
+      })
+      .catch(() => {}); // Fallback: keep DEFAULT_BUNDLES
+  }, []);
 
   useEffect(() => {
     const measure = () => {
@@ -726,7 +920,7 @@ export default function AgentIPDiscovery() {
   const search = () => {
     if (!q.trim()) { setSr(null); return; }
     const lq = q.toLowerCase();
-    const m = BUNDLES.filter(b =>
+    const m = bundles.filter(b =>
       b.name.toLowerCase().includes(lq) || b.category.includes(lq) ||
       b.tags.some(t => t.includes(lq)) || b.summary.toLowerCase().includes(lq) ||
       b.graph.nodes.some(n => n.visible && n.label.toLowerCase().includes(lq))
@@ -773,9 +967,9 @@ export default function AgentIPDiscovery() {
           </div>
           {sr&&<div style={{ fontSize:9,color:sr.n>0?C.green:C.red,marginBottom:8 }}>{sr.m}</div>}
           <div style={{ fontSize:9,color:C.textMuted,marginBottom:8,letterSpacing:"0.5px" }}>
-            CATALOG · {BUNDLES.length} bundles
+            CATALOG · {bundles.length} bundles
           </div>
-          {BUNDLES.map(b=><BundleCard key={b.bundleId} bundle={b} selected={sel?.bundleId===b.bundleId} onSelect={()=>setSel(b)}/>)}
+          {bundles.map(b=><BundleCard key={b.bundleId} bundle={b} selected={sel?.bundleId===b.bundleId} onSelect={()=>setSel(b)}/>)}
 
           <div style={{ marginTop:12,padding:10,background:C.surface,border:`1px dashed ${C.border}`,borderRadius:8,textAlign:"center" }}>
             <div style={{ fontSize:10,color:C.accent,fontWeight:700,marginBottom:4 }}>POST /package → $5.00 USDC</div>
@@ -821,7 +1015,7 @@ export default function AgentIPDiscovery() {
           {/* Detail panel */}
           {sel&&(
             <div style={{ borderTop:`1px solid ${C.border}`,padding:14,background:C.surface,
-              maxHeight:260,overflowY:"auto",flexShrink:0 }}>
+              maxHeight:280,overflowY:"auto",flexShrink:0 }}>
               <div style={{ display:"flex",justifyContent:"space-between",marginBottom:6 }}>
                 <div>
                   <div style={{ fontWeight:700,fontSize:14 }}>{sel.name}</div>
@@ -829,11 +1023,51 @@ export default function AgentIPDiscovery() {
                     {sel.bundleId} · by {sel.creator.agentName} · ERC-8004: {sel.creator.erc8004Identity}
                   </div>
                 </div>
+                {sel.saleType === "secondary" && (
+                  <div style={{ background:C.greenDim,color:C.green,padding:"4px 10px",borderRadius:6,
+                    fontSize:11,fontWeight:700,fontFamily:"'JetBrains Mono',monospace",alignSelf:"flex-start" }}>
+                    {sel.buyNowPrice} {sel.buyNowCurrency}
+                  </div>
+                )}
               </div>
-              <div style={{ fontSize:11,color:C.textDim,lineHeight:1.5,marginBottom:4,fontFamily:"system-ui" }}>
+              <div style={{ fontSize:11,color:C.textDim,lineHeight:1.5,marginBottom:8,fontFamily:"system-ui" }}>
                 {sel.summary}
               </div>
-              <BidPanel bundle={sel}/>
+
+              {/* On-chain receipts with BaseScan links */}
+              <div style={{ marginBottom:8 }}>
+                <div style={{ fontSize:9,color:C.textMuted,fontFamily:"'JetBrains Mono',monospace",marginBottom:4,letterSpacing:"0.5px" }}>
+                  ON-CHAIN RECEIPTS · {sel.provenance.receipts} verified on {sel.provenance.network}
+                </div>
+                <div style={{ display:"flex",gap:4,flexWrap:"wrap" }}>
+                  {sel.graph.nodes.filter(n=>n.type==="receipt").slice(0,5).map(n=>(
+                    <a key={n.id}
+                      href={`https://sepolia.basescan.org/tx/${n.id}`}
+                      target="_blank" rel="noopener noreferrer"
+                      style={{ background:C.greenDim,color:C.green,padding:"2px 6px",borderRadius:4,
+                        fontSize:8,fontFamily:"'JetBrains Mono',monospace",textDecoration:"none",
+                        border:`1px solid ${C.green}33`,cursor:"pointer" }}
+                      title={`View ${n.label} on BaseScan`}>
+                      {n.label}
+                    </a>
+                  ))}
+                </div>
+              </div>
+
+              {sel.saleType === "secondary" ? (
+                <div style={{ background:C.surfaceAlt,border:`1px solid ${C.green}33`,borderRadius:8,
+                  padding:10,textAlign:"center" }}>
+                  <div style={{ fontSize:11,color:C.green,fontWeight:700,marginBottom:4,
+                    fontFamily:"'JetBrains Mono',monospace" }}>
+                    Buy Now: {sel.buyNowPrice} {sel.buyNowCurrency}
+                  </div>
+                  <div style={{ fontSize:9,color:C.textMuted,fontFamily:"system-ui" }}>
+                    Secondary sale · Purchase via CLI: POST /buy/{sel.bundleId}
+                  </div>
+                </div>
+              ) : (
+                <BidPanel bundle={sel}/>
+              )}
             </div>
           )}
         </div>

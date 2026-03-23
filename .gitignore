@@ -1,2 +1,8 @@
 .env
 node_modules/
+.DS_Store
+agentip-output/
+agentip-output.tar.gz
+workflows/
+memory/
+*.tar.gz

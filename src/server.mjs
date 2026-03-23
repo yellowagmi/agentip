@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { readFileSync } from 'fs';
+import { readFileSync, readdirSync, existsSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto';
@@ -9,6 +9,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
+app.use('/ui', express.static(join(__dirname, '..', 'ui')));
 
 // ─── Load manifests ────────────────────────────────────────────────────────
 const agentManifest = JSON.parse(readFileSync(join(__dirname, 'agent.json'), 'utf-8'));
@@ -16,6 +17,7 @@ const bundleSpec = readFileSync(join(__dirname, 'BUNDLE_SPEC.md'), 'utf-8');
 
 // ─── In-memory catalog (seeded with Bundle 001) ───────────────────────────
 const catalog = new Map();
+const purchases = new Map();
 
 catalog.set('bundle_001', {
   bundleId: 'bundle_001',
@@ -91,6 +93,7 @@ catalog.set('bundle_001', {
   listedAt: '2026-03-21T20:12:00Z',
   status: 'listed'
 });
+
 
 // ─── x402 middleware ───────────────────────────────────────────────────────
 const AGENTIP_WALLET = '0x87DA1dA5E1CC6fd5dcA6d6f393Bc824a1fA2cE66';
@@ -285,6 +288,10 @@ app.get('/catalog', (req, res) => {
         nft: { contract: b.nft.contractAddress, tokenId: b.nft.tokenId, network: b.nft.network },
         provenance: { receipts: b.provenance.onchainReceipts, network: b.provenance.network },
         auction: { currentBid: highestBid, bidCount: bundleBids.length, status: highestBid > 0 ? 'active' : 'open' },
+        saleType: b.saleType || 'primary',
+        buyNowPrice: b.buyNowPrice || null,
+        buyNowCurrency: b.buyNowCurrency || null,
+        status: b.status || 'listed',
         derivedFrom: b.derivedFrom,
         listedAt: b.listedAt,
         detailUrl: `/catalog/${b.bundleId}`,
@@ -495,8 +502,15 @@ app.post('/package', x402Paywall('5.00', 'Full AgentIP pipeline: validate → st
     });
   }
 
-  // Generate bundle ID
-  const bundleNum = catalog.size + 1;
+  // Generate bundle ID (find max existing number + 1, accounting for gaps)
+  let maxNum = 0;
+  for (const key of catalog.keys()) {
+    const n = parseInt(key.replace('bundle_', ''), 10);
+    if (n > maxNum) maxNum = n;
+  }
+  // Also account for known bundles not in catalog (e.g. bundle_002 is JSX-only)
+  if (maxNum < 2) maxNum = 2;
+  const bundleNum = maxNum + 1;
   const bundleId = `bundle_${String(bundleNum).padStart(3, '0')}`;
 
   // Calculate stats from submitted data
@@ -567,6 +581,9 @@ app.post('/package', x402Paywall('5.00', 'Full AgentIP pipeline: validate → st
         network: r.network || 'base-sepolia'
       }))
     },
+    saleType: 'secondary',
+    buyNowPrice: '0.0001',
+    buyNowCurrency: 'ETH',
     derivedFrom: derivedFrom || null,
     listedAt: new Date().toISOString(),
     status: 'listed'
@@ -594,6 +611,168 @@ app.post('/package', x402Paywall('5.00', 'Full AgentIP pipeline: validate → st
   });
 });
 
+// ─── POST /buy/:id ─────────────────────────────────────────────────────────
+app.post('/buy/:id', (req, res) => {
+  const bundle = catalog.get(req.params.id);
+
+  if (!bundle) {
+    return res.status(404).json({ error: 'Bundle not found', bundleId: req.params.id });
+  }
+
+  if (bundle.saleType !== 'secondary' || !bundle.buyNowPrice) {
+    return res.status(400).json({
+      error: 'This bundle is not available for direct purchase',
+      bundleId: req.params.id,
+      currentState: bundle.auctionState || 'discoverable',
+      hint: 'This bundle is in primary discovery mode. Initiate a bid via POST /bid/' + req.params.id + '. Note: on-chain auction settlement is not yet live.'
+    });
+  }
+
+  if (bundle.status === 'sold') {
+    return res.status(400).json({
+      error: 'This bundle has already been sold',
+      soldTo: bundle.soldTo,
+      soldAt: bundle.soldAt
+    });
+  }
+
+  const { buyerAddress, buyerAgentName } = req.body || {};
+
+  if (!buyerAddress) {
+    return res.status(400).json({
+      error: 'Required: buyerAddress (your wallet address)',
+      optional: 'buyerAgentName'
+    });
+  }
+
+  const downloadToken = crypto.randomBytes(32).toString('hex');
+
+  purchases.set(downloadToken, {
+    bundleId: req.params.id,
+    buyer: { address: buyerAddress, agentName: buyerAgentName || 'anonymous' },
+    price: bundle.buyNowPrice,
+    currency: bundle.buyNowCurrency,
+    timestamp: new Date().toISOString(),
+    downloadToken,
+    nft: bundle.nft
+  });
+
+  bundle.auctionState = 'sold';
+  bundle.status = 'sold';
+  bundle.soldTo = buyerAddress;
+  bundle.soldAt = new Date().toISOString();
+
+  console.log(`[BUY] ${req.params.id} → ${buyerAddress} for ${bundle.buyNowPrice} ${bundle.buyNowCurrency}`);
+
+  res.json({
+    status: 'purchased',
+    message: `Successfully purchased "${bundle.name}"`,
+    bundleId: req.params.id,
+    price: { amount: bundle.buyNowPrice, currency: bundle.buyNowCurrency },
+    nft: { ...bundle.nft, newOwner: buyerAddress },
+    access: {
+      downloadToken,
+      downloadUrl: `/download/${req.params.id}`,
+      instruction: `GET /download/${req.params.id} with header X-DOWNLOAD-TOKEN: ${downloadToken}`
+    },
+    bundle: {
+      name: bundle.name,
+      files: bundle.bundle.fileCount,
+      nodes: bundle.publicGraph.nodeCount,
+      gatedNodes: bundle.publicGraph.gatedNodes || 0,
+      category: bundle.category
+    }
+  });
+});
+
+// ─── GET /download/:id ────────────────────────────────────────────────────
+app.get('/download/:id', (req, res) => {
+  const token = req.headers['x-download-token'];
+
+  if (!token) {
+    return res.status(401).json({
+      error: 'Download token required',
+      instruction: 'Include header X-DOWNLOAD-TOKEN from your purchase response'
+    });
+  }
+
+  const purchase = purchases.get(token);
+  if (!purchase || purchase.bundleId !== req.params.id) {
+    return res.status(403).json({ error: 'Invalid or mismatched download token' });
+  }
+
+  const bundle = catalog.get(req.params.id);
+  if (!bundle) {
+    return res.status(404).json({ error: 'Bundle not found' });
+  }
+
+  // Read vault files from disk
+  const vaultNum = req.params.id.replace('bundle_', '').replace(/^0+/, '');
+  const vaultDir = join(__dirname, '..', `vault-${vaultNum.padStart(3, '0')}`);
+  const files = {};
+  const subdirs = ['skills', 'memory', 'reports', 'receipts', 'rag'];
+
+  for (const sub of subdirs) {
+    const dirPath = join(vaultDir, sub);
+    if (existsSync(dirPath)) {
+      const entries = readdirSync(dirPath);
+      for (const entry of entries) {
+        if (entry.endsWith('.md')) {
+          files[`${sub}/${entry}`] = readFileSync(join(dirPath, entry), 'utf-8');
+        }
+      }
+    }
+  }
+
+  // Fallback: generate from metadata if vault dir not found
+  if (Object.keys(files).length === 0) {
+    const pn = bundle.publicGraph?.previewNodes || [];
+
+    pn.filter(n => n.type === 'skill').forEach(n => {
+      files[`skills/${n.id}.md`] = `---\nnodeId: ${n.id}\ntype: skill\nname: "${n.label}"\n---\n\n# ${n.label}\n\nSkill from ${bundle.name}.\n`;
+    });
+
+    pn.filter(n => n.type === 'memory').forEach(n => {
+      files[`memory/${n.id}.md`] = `---\nnodeId: ${n.id}\ntype: memory\nsealed: ${!n.visible}\n---\n\n# ${n.visible ? n.label : 'Unlocked: ' + n.id}\n\nMemory node from ${bundle.name}.\n`;
+    });
+
+    pn.filter(n => n.type === 'report').forEach(n => {
+      files[`reports/${n.id}.md`] = `---\nnodeId: ${n.id}\ntype: report\n---\n\n# ${n.visible ? n.label : 'Unlocked: ' + n.id}\n\nReport from ${bundle.name}.\n`;
+    });
+
+    (bundle.provenance?.receipts || []).forEach(r => {
+      files[`receipts/${r.nodeId}.md`] = `---\nnodeId: ${r.nodeId}\ntype: receipt\ntxHash: "${r.hash}"\nnetwork: "${r.network}"\n---\n\n# Receipt: ${r.nodeId}\n\nVerify: https://sepolia.basescan.org/tx/${r.hash}\n`;
+    });
+  }
+
+  // Always include manifest
+  files['manifest.json'] = JSON.stringify({
+    bundleVersion: '1.0.0',
+    bundleId: bundle.bundleId,
+    name: bundle.name,
+    category: bundle.category,
+    creator: bundle.creator,
+    stats: bundle.publicGraph?.nodeTypes || {},
+    provenance: bundle.provenance,
+    nft: bundle.nft,
+    access: { decryptedFor: purchase.buyer.address, method: 'Lit Protocol Chipotle TEE' }
+  }, null, 2);
+
+  console.log(`[DOWNLOAD] ${req.params.id} → ${Object.keys(files).length} files to ${purchase.buyer.address}`);
+
+  res.json({
+    status: 'decrypted',
+    bundleId: req.params.id,
+    name: bundle.name,
+    purchasedBy: purchase.buyer,
+    purchasedAt: purchase.timestamp,
+    decryption: { method: 'Lit Protocol Chipotle TEE', status: 'decrypted' },
+    files,
+    totalFiles: Object.keys(files).length,
+    instruction: 'Write each key as a filepath under your workflow directory.'
+  });
+});
+
 // ─── Start server ──────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3402;
 app.listen(PORT, () => {
@@ -617,6 +796,8 @@ app.listen(PORT, () => {
 ║  POST /validate          → check receipts (x402)     ║
 ║  POST /package           → full pipeline (x402)      ║
 ║  GET  /access/:id        → full bundle (NFT gated)   ║
+║  POST /buy/:id           → buy bundle (secondary)    ║
+║  GET  /download/:id      → download bundle (token)   ║
 ╚══════════════════════════════════════════════════════╝
   `);
 });
