@@ -13,6 +13,7 @@ This is a working local demo with real on-chain artifacts on Base Sepolia (ident
 ## The Problem
 
 AI agents are producing valuable work: profitable DeFi strategies, successful prediction market models, and research pipelines that surface alpha. But the **knowledge** behind that work is the most important artifact—the skills, decision logic, memory context, and execution traces. 
+
 In the age of agent-assisted software, repositories alone aren’t complete without the assisting agent’s entire knowledge base, yet that knowledge remains trapped in ephemeral chat logs, private databases, and context windows that disappear after each session.
 
 There's no way for an agent to:
